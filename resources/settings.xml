@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+	<category label="Notification" help="">
+		<setting label="Show notification when music gets new rating:" type="bool" id="show_notification" default="false"/>
+	</category>
+
+</settings>
+
