@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
-	<category label="Notification" help="">
-		<setting label="Show notification when music gets new rating:" type="bool" id="show_notification" default="false"/>
+	<category label="Main Addon" help="">
+		<setting label="Get rating as Music is playing" type="bool" id="addon_running" default="false"/>
 	</category>
-
+	<category label="Notification" help="">
+		<setting id="separator" type="lsep" label="Song Started"/>
+		<setting label="Show notification when music starts:" type="bool" id="start_notification" default="false"/>
+		<setting id="separator" type="lsep" label="Song Stopped or Skipped"/>
+		<setting label="Show notification when music gets new rating:" type="bool" id="show_notification" default="false"/>
+		<setting id="separator" type="lsep" label="Song is Playing"/>
+		<setting label="Show real-time notification when music gets new rating:" type="bool" id="real_show_notification" default="false"/>
+	</category>
 </settings>
 

@@ -19,7 +19,7 @@ class Monitor(xbmc.Monitor):
     def onPlayBackStarted(self):
         # Music Library music is set to "True"
         if start_notification == 'true':
-            xbmc.executebuiltin("Notification(%s, %s, time=2000)" % (addon_name, '{} Started'.format(song_title)))
+            xbmc.executebuiltin("Notification(%s, %s, time=2000)" % (addon_name, '{} Started'.format(current_song)))
         self.is_library_song = True
 
     def onPlayBackStopped(self, current_song, song_id, new_rating):
@@ -85,19 +85,49 @@ while not monitor.abortRequested():
                     if current_song == '':
                         monitor.onPlayBackStarted()
                         
-                        # Retrieve Song Data as player start:
+                        # Start the JSONRPC
                         xbmc.executeJSONRPC('{"jsonrpc":"2.0","method":"JSONRPC.Introspect","id":1}')
-                        result = xbmc.executeJSONRPC('{"jsonrpc":"2.0","method":"Player.GetItem","params":{"playerid":0,"properties":["userrating"]},"id":1}')
-                        song_details = json.loads(result)["result"]["item"]
-                        song_id = song_details["id"]
-                        current_id = xbmc.getInfoLabel('MusicPlayer.DBID')      #  Get database Id of new song
                         
+                        # Retrieve Song Data as player start:
+                        song = xbmc.executeJSONRPC('{"jsonrpc":"2.0","method":"Player.GetItem","params":{"playerid":0,"properties":["userrating"]},"id":1}')
+                        song_details = json.loads(song)["result"]["item"]
+                        song_id = song_details["id"]
+                        #  Get database Id of new song                        
+                        current_id = xbmc.getInfoLabel('MusicPlayer.DBID')
+                        
+                        # Retrieve Album ID from song as player start:                        
+                        result = xbmc.executeJSONRPC('{"jsonrpc":"2.0","method":"Player.GetItem","params":{"playerid":0,"properties":["albumid"]},"id":1}')
+                        album_details = json.loads(result)["result"]["item"]
+                        album_id = album_details["albumid"]
+                        
+                        # Retrieve album details including the number of songs
+                        result = xbmc.executeJSONRPC('{"jsonrpc":"2.0","method":"AudioLibrary.GetSongs","params":{"filter":{"albumid":' + str(album_id) + '}},"id":2}')
+                        album_info = json.loads(result)["result"]["songs"]
+
+                        # Count the number of songs in the album
+                        song_count = len(album_info)
+                        
+                        # Retrieve user ratings for each song in the album
+                        total_rating = 0
+                        for song in album_info:
+                            song_id = song["songid"]
+                            result = xbmc.executeJSONRPC('{"jsonrpc":"2.0","method":"AudioLibrary.GetSongDetails","params":{"songid":' + str(song_id) + ',"properties":["userrating"]},"id":3}')
+                            song_details = json.loads(result)["result"]["songdetails"]
+                            user_rating = song_details["userrating"]
+                            total_rating += user_rating
+
+                        # Calculate the average rating
+                        song_count = len(album_info)
+                        average_rating = total_rating / song_count
+                        
+
                         # Set current song from player:
                         current_song = xbmc.getInfoLabel('MusicPlayer.Title')  
-                    
+
                     # If song has changed, first will save current data in previous song,
-                    # The will retrieve data for the new song:
+                    # Then will retrieve data for the new song:
                     if current_song != song_title:
+                        
                         # Save Song Data in previous song:
                         xbmc.executeJSONRPC('{"jsonrpc":"2.0","method":"AudioLibrary.SetSongDetails","params":{"songid": %d, "userrating":%d},"id":1}' % (song_id, new_rating))
                         if show_notification == 'true':
@@ -115,6 +145,10 @@ while not monitor.abortRequested():
                     # Show Real Time Rating
                     if real_show_notification == 'true':
                         xbmc.executebuiltin("Notification(%s, %s, time=2000)" % (addon_name, ' {} rating is {}'.format(current_song, new_rating)))
+                        # xbmc.executebuiltin("Notification(%s, %s, time=2000)" % (addon_name, 'Song ID: {}'.format(song_id)))
+                        # xbmc.executebuiltin("Notification(%s, %s, time=2000)" % (addon_name, 'Album ID: {}'.format(album_id)))
+                        # xbmc.executebuiltin("Notification(%s, %s, time=2000)" % (addon_name, 'Songs: {}'.format(song_count)))
+                        # xbmc.executebuiltin("Notification(%s, %s, time=2000)" % (addon_name, 'Total Rating: {}'.format(average_rating)))
                         
             else:
                 # For use when the user stops playback.
