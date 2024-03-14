@@ -10,6 +10,7 @@
                 <label>Song Auto Rating Settings</label>
                 <visible>Window.IsActive(Music)</visible>
             </item>
+			<!-- COMENTARIO-->
 			<!-- <item library="ratealbuns.py">
                 <label>Rate this Album</label>
                 <visible>true</visible>
